@@ -1,0 +1,56 @@
+name: Build, Test and Deploy API
+
+on:
+  push:
+    branches: [dev, master]
+
+jobs:
+  build-test-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set env to Dev
+        if: endsWith(github.ref, '/dev')
+        run: |
+          echo "HOSTNAME=https://dev.aarhusvandsportscenter.dk" >> $GITHUB_ENV
+          echo "CONTACT_MAIL_TO_EMAIL=thomas@bleptek.dk" >> $GITHUB_ENV
+          echo "CONFIGURATION=Debug" >> $GITHUB_ENV
+          echo "DBCONNSTR=${{secrets.DBCONNSTR_DEV}}" >> $GITHUB_ENV
+          echo "AUTH_JWTKEY=${{secrets.AUTH_JWTKEY_DEV}}" >> $GITHUB_ENV
+          echo "FTP_REMOTE_DIR=/dev/" >> $GITHUB_ENV
+      - name: Set env to Production
+        if: endsWith(github.ref, '/master')
+        run: |
+          echo "HOSTNAME=https://aarhusvandsportscenter.dk" >> $GITHUB_ENV
+          echo "CONTACT_MAIL_TO_EMAIL=mail@aarhusvandsportscenter.dk" >> $GITHUB_ENV
+          echo "CONFIGURATION=Release" >> $GITHUB_ENV
+          echo "DBCONNSTR=${{secrets.DBCONNSTR_PROD}}" >> $GITHUB_ENV
+          echo "AUTH_JWTKEY=${{secrets.AUTH_JWTKEY_PROD}}" >> $GITHUB_ENV
+          echo "FTP_REMOTE_DIR=/public_html/" >> $GITHUB_ENV
+      - uses: actions/checkout@v2
+      - name: Setup .Net
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+      - name: Build
+        run: dotnet build
+      - name: Test
+        run: dotnet test --verbosity normal
+      - name: Variable substitution
+        uses: ./.github/workflows/variable_substitution
+        with:
+          hostname: ${{env.HOSTNAME}}
+          contact_mail_to_email: ${{env.CONTACT_MAIL_TO_EMAIL}}
+          sendgrid_apikey: ${{secrets.SENDGRID_APIKEY}}
+          db_connectionstring: ${{env.DBCONNSTR}}
+          auth_jwtkey: ${{env.AUTH_JWTKEY}}
+      - name: Publish
+        run: dotnet publish ./src/Aarhusvandsportscenter.Api/ --runtime win-x86 --self-contained true -c ${{env.CONFIGURATION}}
+      - name: FTP Deploy
+        uses: ./.github/workflows/ftpdeploy
+        with:
+          ftp_server: ${{secrets.FTP_SERVER}}
+          ftp_username: ${{secrets.FTP_USERNAME}}
+          ftp_password: ${{secrets.FTP_PASSWORD}}
+          ftp_remote_dir: ${{env.FTP_REMOTE_DIR}}
+          ftp_local_dir: ./src/Aarhusvandsportscenter.Api/bin/${{env.CONFIGURATION}}/net5.0/win-x86/publish/
+          ftp_local_appoffline_dir: ./src/Aarhusvandsportscenter.Api/app_offline/

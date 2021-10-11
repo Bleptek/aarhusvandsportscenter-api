@@ -1,0 +1,50 @@
+name: Build, Test and Deploy API (DEV)
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  build-test-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup .Net
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+      - name: Build
+        run: dotnet build
+      - name: Test
+        run: dotnet test --verbosity normal
+      - uses: microsoft/variable-substitution@v1 
+        with:
+          files: './src/Aarhusvandsportscenter.Api/appsettings.json'
+        env:
+          ConnectionStrings.DbConnection: ${{ secrets.DBCONNSTR_DEV }}
+          Authorization.Issuer: "https://dev.aarhusvandsportscenter.dk/api"
+          Authorization.Audience: "https://dev.aarhusvandsportscenter.dk/api"
+          SendGrid.RentalCancellationLink: "https://dev.aarhusvandsportscenter.dk/booking/aflys/{id}"
+          SendGrid.RentalFinishLink: "https://dev.aarhusvandsportscenter.dk/booking/done/{id}/{phone}"
+          SendGrid.ResetPasswordLink": "https://dev.aarhusvandsportscenter.dk/opdater-adganskode?passwordToken={passwordToken}"
+      - name: Publish Debug
+        run: dotnet publish ./src/Aarhusvandsportscenter.Api/ --runtime win-x86 --self-contained true -c Debug
+      - name: Kill application (http request)
+        continue-on-error: true
+        uses: fjogeleit/http-request-action@master
+        with:
+          url: https://dev.aarhusvandsportscenter.dk/api/v1/System/kill?graceful=true
+          method: GET
+          contentType: application/json
+      - name: FTP Deploy
+        uses: SamKirkland/FTP-Deploy-Action@4.0.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 21
+          protocol: ftp
+          exclude: wwwroot/images/contentPages/**
+            - frontend/**
+          local-dir: ./src/Aarhusvandsportscenter.Api/bin/Debug/net5.0/win-x86/publish/
+          server-dir: /dev/

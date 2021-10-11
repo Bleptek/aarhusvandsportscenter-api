@@ -1,0 +1,48 @@
+name: Ftp deploy
+description: Uploads published files to ftp server
+
+inputs:
+  ftp_server:
+    required: true
+  ftp_username:
+    required: true
+  ftp_password:
+    required: true
+  ftp_remote_dir:
+    required: true
+  ftp_local_dir:
+    required: true
+  ftp_local_appoffline_dir:
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: sebastianpopp/ftp-action@releases/v2
+      with:
+        host: ${{inputs.ftp_server}}
+        user: ${{inputs.ftp_username}}
+        password: ${{inputs.ftp_password}}
+        localDir: ${{inputs.ftp_local_appoffline_dir}}
+        remoteDir: "${{inputs.ftp_remote_dir}}"
+    - uses: SamKirkland/FTP-Deploy-Action@4.0.0
+      name: FTP Deploy
+      with:
+        server: ${{inputs.ftp_server}}
+        username: ${{inputs.ftp_username}}
+        password: ${{inputs.ftp_password}}
+        port: 21
+        protocol: ftp
+        exclude: wwwroot/images/contentPages/**
+          - frontend/**
+          - app_offline.htm
+        local-dir: ${{inputs.ftp_local_dir}}
+        server-dir: ${{inputs.ftp_remote_dir}}
+    - uses: StephanThierry/ftp-delete-action@v1
+      with:
+        host: ${{inputs.ftp_server}}
+        user: ${{inputs.ftp_username}}
+        password: ${{inputs.ftp_password}}
+        remoteFiles: "app_offline.htm"
+        workingDir: ${{inputs.ftp_remote_dir}}
+        ignoreSSL: "1"

@@ -1,0 +1,31 @@
+name: Variable substitution
+description: substitues environment variables for dev and production
+
+inputs:
+  hostname:
+    required: true
+  sendgrid_apikey:
+    required: true
+  db_connectionstring:
+    required: true
+  auth_jwtkey:
+    required: true
+  contact_mail_to_email:
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: microsoft/variable-substitution@v1 
+      with:
+        files: './src/Aarhusvandsportscenter.Api/appsettings.json'
+      env:
+        ConnectionStrings.DbConnection: ${{inputs.db_connectionstring}}
+        Authorization.Issuer: "${{inputs.hostname}}/api"
+        Authorization.Audience: "${{inputs.hostname}}/api"
+        Authorization.JwtKey: ${{inputs.auth_jwtkey}}
+        SendGrid.ApiKey: ${{inputs.sendgrid_apikey}}
+        SendGrid.RentalCancellationLink: "${{inputs.hostname}}/booking/aflys/{id}"
+        SendGrid.RentalFinishLink: "${{inputs.hostname}}/booking/done/{id}/{phone}"
+        SendGrid.ResetPasswordLink: "${{inputs.hostname}}/opdater-adganskode?passwordToken={passwordToken}"
+        SendGrid.ContactMailToEmail: "${{inputs.contact_mail_to_email}}"
