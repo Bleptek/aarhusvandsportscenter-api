@@ -26,7 +26,7 @@ Hosted at:
 
 Read through the appsettings.json configuration file for any values missing.
 This is essential before the project can run without error.
-Using VS Code, a launch.json file can have a configuration containing an env object as such:
+Using VS Code, a launch.json file can have a configuration containing an env object as such: 
 
 ```
 "env": {
