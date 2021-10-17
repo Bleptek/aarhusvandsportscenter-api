@@ -1,6 +1,6 @@
 # Aarhus Vandsportscenter - REST API
 
-This serves as the backend for the aarhusvandsportscenter.dk website.
+This serves as the backend for the aarhusvandsportscenter.dk website. 
 
 ## About this project
 
