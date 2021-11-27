@@ -65,7 +65,6 @@ namespace Aarhusvandsportscenter.Api.Tests.Controllers
             {
                 Assert.True(x.EndDate.ToUniversalTime().Date >= startDate.ToUniversalTime().Date);
                 Assert.True(x.StartDate.ToUniversalTime().Date <= endDate.ToUniversalTime().Date);
-                Assert.Single(x.Items);
                 Assert.NotNull(x.Items.First().ProductName);
             });
         }
@@ -421,6 +420,44 @@ namespace Aarhusvandsportscenter.Api.Tests.Controllers
                 Assert.Single(x.Items);
                 Assert.NotNull(x.Items.First().ProductName);
             });
+        }
+
+        [Fact]
+        public async Task GetRentalStatistics_EndpointSuccessTest()
+        {
+            // Arrange
+            var category = new RentalCategoryEntity("test1", "red", true);
+            var product1 = new RentalProductEntity("kajak", "kajakker", 5);
+            var product2 = new RentalProductEntity("kano", "kanoer", 5);
+            Func<List<RentalItemEntity>> items = () => new List<RentalItemEntity>(){
+                new RentalItemEntity{
+                    Count = 5,
+                    Product = product1
+                },
+                new RentalItemEntity{
+                    Count = 2,
+                    Product = product2
+                }
+            };
+
+            using (var appDbContext = _factory.GetScopedServiceProvider().GetService<AppDbContext>())
+            {
+                appDbContext.Rentals.AddRange(new List<RentalEntity>(){
+                    new RentalEntity("thomas", "11111111", "asd@mail.com", new DateTime(2021, 1, 20), new DateTime(2021, 1, 25)){Category = category,Items = items()},
+                    new RentalEntity("thomas", "11111111", "asd@mail.com", new DateTime(2021, 1, 20), new DateTime(2021, 1, 25)){Category = category,Items = items()},
+                    new RentalEntity("thomas", "11111111", "asd@mail.com", new DateTime(2021, 1, 20), new DateTime(2021, 1, 25)){Category = category,Items = items()},
+                });
+                appDbContext.SaveChanges();
+            }
+
+            // Act
+            var httpClient = _factory.CreateNewHttpClient(true);
+            var httpResponse = await httpClient.GetAsync($"/api/v1/rentals/statistics");
+
+            // Assert
+            Assert.Equal(HttpStatusCode.OK, httpResponse.StatusCode);
+            var responseObj = await httpResponse.DeserializeHttpResponse<RentalStatisticsResponse>();
+            Assert.NotEmpty(responseObj.Items);
         }
     }
 }

@@ -114,7 +114,7 @@ namespace Aarhusvandsportscenter.Api.Controllers.Rentals
         }
 
         /// <summary>
-        /// Get all rental rentals detailed
+        /// Get all rentals detailed
         /// Requires authorization
         /// </summary>
         [HttpGet("detailed", Name = nameof(GetRentalsDetailed))]
@@ -126,6 +126,20 @@ namespace Aarhusvandsportscenter.Api.Controllers.Rentals
         {
             var rentals = await _mediator.Send(new GetRentalsByFilter.Query(filters));
             return Ok(rentals.Select(x => new RentalResponse(x)));
+        }
+
+
+        /// <summary>
+        /// Get all rental statistics
+        /// Requires authorization
+        /// </summary>
+        [HttpGet("statistics", Name = nameof(GenRentalStatisticts))]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [Authorize]
+        public async Task<IActionResult> GenRentalStatisticts()
+        {
+            var items = await _mediator.Send(new GetRentalStatistics.Query());
+            return Ok(new RentalStatisticsResponse(items));
         }
     }
 }
