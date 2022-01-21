@@ -20,8 +20,6 @@ Hosted at:
 
 - .Net SDK 5.0.1
 
-## Getting Started
-
 ### Environment variables
 
 Read through the appsettings.json configuration file for any values missing.

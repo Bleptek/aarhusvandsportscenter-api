@@ -25,7 +25,7 @@ namespace Aarhusvandsportscenter.Api.Tests.Controllers
         {
             // Arrange
             var email = "someemail@asd.com";
-            var fullName = "donald trump";
+            var fullName = "donald trump";  
             var passwordFirst = "somepassword12312";
             HttpClient httpClient = null;
 
