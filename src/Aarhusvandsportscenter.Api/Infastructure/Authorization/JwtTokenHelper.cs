@@ -9,17 +9,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
 
 namespace Aarhusvandsportscenter.Api.Infastructure.Authorization
 {
     public interface IJwtTokenHelper
     {
-        JwtSecurityToken Token { get; set; }
         string GenerateJwtToken(AccountEntity account);
-        IEnumerable<string> GetAudiences();
-        string GetEmail();
-        DateTime GetExpirationDate();
-        string GetIssuer();
+        bool IsTokenValid();
     }
 
     public class JwtTokenHelper : IJwtTokenHelper
@@ -27,7 +24,6 @@ namespace Aarhusvandsportscenter.Api.Infastructure.Authorization
         private readonly ILogger<JwtTokenHelper> _logger;
         private readonly AuthorizationSettings _authSettings;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        public JwtSecurityToken Token { get; set; }
 
         public JwtTokenHelper(
             ILogger<JwtTokenHelper> logger,
@@ -39,24 +35,39 @@ namespace Aarhusvandsportscenter.Api.Infastructure.Authorization
             this._httpContextAccessor = httpContextAccessor;
         }
 
-        public string GetEmail()
+        private string GetToken()
         {
-            return Token.Claims.First(c => c.Type == CustomClaimTypes.Email).Value as string;
+            var authHeaderStr = _httpContextAccessor.HttpContext!.Request.Headers[HeaderNames.Authorization];
+            if (authHeaderStr.Count == 0)
+                return null;
+
+            var jwtTokenStr = authHeaderStr.ToString().Replace("Bearer ", "");
+            return jwtTokenStr;
         }
 
-        public string GetIssuer()
+        public bool IsTokenValid()
         {
-            return Token.Issuer;
-        }
+            var token = GetToken();
+            if (token == null)
+                return false;
 
-        public IEnumerable<string> GetAudiences()
-        {
-            return Token.Audiences;
-        }
+            var handler = new JwtSecurityTokenHandler();
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidAudience = _authSettings.Audience,
+                ValidIssuer = _authSettings.Issuer,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authSettings.JwtKey))
+            };
 
-        public DateTime GetExpirationDate()
-        {
-            return Token.ValidTo;
+            try
+            {
+                handler.ValidateToken(token, validationParameters, out _);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public string GenerateJwtToken(AccountEntity account)

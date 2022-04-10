@@ -277,6 +277,42 @@ namespace Aarhusvandsportscenter.Api.Tests.Controllers
         }
 
         [Fact]
+        public async Task DeleteRental_EndpointSuccessTest_WhenAuthorizedAndNoPhoneNumber()
+        {
+            // Arrange
+            var phoneNumber = "12351287653";
+            var rentalToDelete = new RentalEntity("thomas", phoneNumber, "asd@mail.com", new DateTime(2021, 1, 20), new DateTime(2021, 1, 20))
+            {
+                Category = new RentalCategoryEntity("test", "red", true),
+                Items = new List<RentalItemEntity>(){
+                    new RentalItemEntity{
+                        Count = 5,
+                        Product = new RentalProductEntity("kajak", "kajakker", 5)
+                    }
+                }
+            };
+
+            using (var appDbContext = _factory.GetScopedServiceProvider().GetService<AppDbContext>())
+            {
+                appDbContext.Rentals.Add(rentalToDelete);
+                appDbContext.SaveChanges();
+            }
+
+            // Act
+            var httpClient = _factory.CreateNewHttpClient(true);
+            var httpResponse = await httpClient.DeleteAsync($"/api/v1/rentals/{rentalToDelete.Id}");
+
+            // Assert
+            Assert.Equal(HttpStatusCode.NoContent, httpResponse.StatusCode);
+
+            using (var appDbContext = _factory.GetScopedServiceProvider().GetService<AppDbContext>())
+            {
+                var deletedRental = await appDbContext.Rentals.FirstOrDefaultAsync(x => x.Id == rentalToDelete.Id);
+                Assert.Null(deletedRental);
+            }
+        }
+
+        [Fact]
         public async Task FinishRental_EndpointSuccessTest()
         {
             // Arrange

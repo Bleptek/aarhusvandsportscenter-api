@@ -11,6 +11,7 @@ using Aarhusvandsportscenter.Api.Domain.Queries.Rentals;
 using Aarhusvandsportscenter.Api.Domain.Queries.Rentals.GetRentalsByFilter;
 using LHSBrackets.ModelBinder;
 using Microsoft.AspNetCore.Authorization;
+using Aarhusvandsportscenter.Api.Infastructure.Authorization;
 
 namespace Aarhusvandsportscenter.Api.Controllers.Rentals
 {
@@ -25,11 +26,14 @@ namespace Aarhusvandsportscenter.Api.Controllers.Rentals
     public class RentalsController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly IJwtTokenHelper _jwtTokenHelper;
 
         public RentalsController(
-            IMediator mediator)
+            IMediator mediator,
+            IJwtTokenHelper jwtTokenHelper)
         {
             _mediator = mediator;
+            _jwtTokenHelper = jwtTokenHelper;
         }
 
         /// <summary>
@@ -76,6 +80,7 @@ namespace Aarhusvandsportscenter.Api.Controllers.Rentals
         /// <summary>
         /// Delete rental.
         /// Phone is required to match. This is used to verify that you are allowed to delete the rental.
+        /// If you're authorized, no phone is required.
         /// </summary>
         [HttpDelete("{id}", Name = nameof(DeleteRental))]
         [ProducesResponseType((int)HttpStatusCode.NoContent)]
@@ -83,7 +88,8 @@ namespace Aarhusvandsportscenter.Api.Controllers.Rentals
             [FromRoute] int id,
             [FromQuery] string phone)
         {
-            await _mediator.Send(new DeleteRental.Command(id, phone));
+            var isAuthorized = _jwtTokenHelper.IsTokenValid();
+            await _mediator.Send(new DeleteRental.Command(id, phone, isAuthorized));
             return NoContent();
         }
 

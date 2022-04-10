@@ -10,7 +10,7 @@ namespace Aarhusvandsportscenter.Api.Domain.Commands.Rentals
 {
     public static class DeleteRental
     {
-        public record Command(int Id, string Phone) : IRequest;
+        public record Command(int Id, string Phone, bool SkipPhoneValidation) : IRequest;
 
         public class Handler : AsyncRequestHandler<Command>
         {
@@ -29,7 +29,7 @@ namespace Aarhusvandsportscenter.Api.Domain.Commands.Rentals
             {
                 var rentalToDelete = await _dbContext.Rentals.FirstOrDefaultAsync(x =>
                     x.Id == request.Id &&
-                    x.Phone == request.Phone);
+                    (request.SkipPhoneValidation || x.Phone == request.Phone));
 
                 if (rentalToDelete == null)
                     throw new NotFoundException(ErrorCodes.Rentals.RENTAL_DOESNT_EXIST);
