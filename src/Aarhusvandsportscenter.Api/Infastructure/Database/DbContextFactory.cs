@@ -17,9 +17,9 @@ namespace Aarhusvandsportscenter.Api.Infastructure.Database
         {
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
             optionsBuilder.UseMySql("server=someserver.com;database=somedb;user=someuser;password=somepw",
-                        new MySqlServerVersion(new Version(5, 7, 32)),
-                        mySqlOptions => mySqlOptions
-                            .CharSetBehavior(CharSetBehavior.NeverAppend));
+                        new MySqlServerVersion(new Version(5, 7, 32)));
+                        // mySqlOptions => mySqlOptions
+                        //     .CharSetBehavior(CharSetBehavior.NeverAppend));
 
             return new AppDbContext(optionsBuilder.Options);
         }

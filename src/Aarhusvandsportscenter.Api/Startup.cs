@@ -46,9 +46,9 @@ namespace Aarhusvandsportscenter.Api
             services.AddDbContext<AppDbContext>(opts =>
             {
                 opts.UseMySql(Configuration.GetConnectionString("DbConnection"),
-                        new MySqlServerVersion(new Version(5, 7, 32)), // found in phpmyadmin by executing SELECT VERSION();
-                        mySqlOptions => mySqlOptions
-                            .CharSetBehavior(CharSetBehavior.NeverAppend))
+                        new MySqlServerVersion(new Version(5, 7, 32))) // found in phpmyadmin by executing SELECT VERSION();
+                        // mySqlOptions => mySqlOptions
+                        //     .CharSetBehavior(CharSetBehavior.NeverAppend))
                     // Everything from this point on is optional but helps with debugging.
                     .EnableSensitiveDataLogging()
                     .EnableDetailedErrors();
@@ -56,9 +56,9 @@ namespace Aarhusvandsportscenter.Api
             services.AddDbContext<LeschleyDbContext>(opts =>
             {
                 opts.UseMySql(Configuration.GetConnectionString("LeschleyDbConnection"),
-                    new MariaDbServerVersion(new Version(10, 4, 20)), // found in phpmyadmin by executing SELECT VERSION();
-                    mySqlOptions => mySqlOptions
-                        .CharSetBehavior(CharSetBehavior.NeverAppend))
+                    new MariaDbServerVersion(new Version(10, 4, 20))) // found in phpmyadmin by executing SELECT VERSION();
+                    // mySqlOptions => mySqlOptions
+                    //     .CharSetBehavior(CharSetBehavior.NeverAppend))
                     // Everything from this point on is optional but helps with debugging.
                     .EnableSensitiveDataLogging()
                     .EnableDetailedErrors();
