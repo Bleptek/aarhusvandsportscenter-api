@@ -14,7 +14,6 @@ using Aarhusvandsportscenter.Api.Domain.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using SendGrid;
 using Microsoft.AspNetCore.Http;
 using System.Text.Json.Serialization;
 using Aarhusvandsportscenter.Api.Infastructure.Database;
@@ -67,10 +66,10 @@ namespace Aarhusvandsportscenter.Api
             services.AddScoped<IPasswordService, PasswordService>();
             services.AddScoped<IMailService, SmtpMailService>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddScoped<ISendGridClient, SendGridClient>(serviceProvider =>
-            {
-                return new SendGridClient(appsettings.SendGrid.ApiKey);
-            });
+            // services.AddScoped<ISendGridClient, SendGridClient>(serviceProvider =>
+            // {
+            //     return new SendGridClient(appsettings.SendGrid.ApiKey);
+            // });
 
             services.AddScoped<IJwtTokenHelper, JwtTokenHelper>();
 

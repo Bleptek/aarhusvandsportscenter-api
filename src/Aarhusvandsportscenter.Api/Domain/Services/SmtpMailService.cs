@@ -5,8 +5,6 @@ using Aarhusvandsportscenter.Api;
 using Aarhusvandsportscenter.Api.Infastructure.Database.Entities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using SendGrid;
-using SendGrid.Helpers.Mail;
 
 namespace Aarhusvandsportscenter.Api.Domain.Services
 {
