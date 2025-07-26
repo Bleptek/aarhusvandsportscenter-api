@@ -12,6 +12,8 @@ inputs:
     required: true
   contact_mail_to_email:
     required: true
+  email_password:
+    required: true
 
 runs:
   using: "composite"
@@ -24,6 +26,7 @@ runs:
         Authorization.Issuer: "${{inputs.hostname}}/api"
         Authorization.Audience: "${{inputs.hostname}}/api"
         Authorization.JwtKey: ${{inputs.auth_jwtkey}}
+        SimplySmtp.Password: ${{inputs.email_password}}
         SendGrid.ApiKey: ${{inputs.sendgrid_apikey}}
         SendGrid.RentalCancellationLink: "${{inputs.hostname}}/booking/aflys/{id}"
         SendGrid.RentalFinishLink: "${{inputs.hostname}}/booking/done/{id}/{phone}"

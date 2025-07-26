@@ -73,7 +73,7 @@ namespace Aarhusvandsportscenter.Api.Infastructure.Middleware
                 WriteIndented = true
             });
 
-            _logger.LogWarning("ExceptionMiddleware {errorResponse}", serializedResponse);
+            _logger.LogWarning(exception, "ExceptionMiddleware {errorResponse}", serializedResponse);
 
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)httpStatusCode;

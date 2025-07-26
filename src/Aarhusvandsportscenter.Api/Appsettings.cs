@@ -6,6 +6,7 @@ namespace Aarhusvandsportscenter.Api
         public ConnectionStrings ConnectionStrings { get; set; }
         public SendGridSettings SendGrid { get; set; }
         public AuthorizationSettings Authorization { get; set; }
+        public SimplySmtpSettings SimplySmtp { get; set; }
         public DefaultAdminAccount[] DefaultAdminAccounts { get; set; } = new DefaultAdminAccount[0];
         public bool CreateDefaultAdminAccounts { get; set; }
 
@@ -31,6 +32,21 @@ namespace Aarhusvandsportscenter.Api
         public string ContactTemplateId { get; set; }
         public string ContactMailToName { get; set; }
         public string ContactMailToEmail { get; set; }
+    }
+
+    public class SimplySmtpSettings
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+        public string Host { get; set; }
+        public int Port { get; set; }
+        public string ContactMailToName { get; set; }
+        public string ContactMailToEmail { get; set; }
+        public string SendFromName { get; set; }
+        public string SendFromEmail { get; set; }
+        public string RentalCancellationLink { get; set; }
+        public string RentalFinishLink { get; set; }
+        public string ResetPasswordLink { get; set; }
     }
 
     public class AuthorizationSettings

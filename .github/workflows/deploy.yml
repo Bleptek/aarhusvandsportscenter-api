@@ -12,7 +12,8 @@ jobs:
         if: endsWith(github.ref, '/dev')
         run: |
           echo "HOSTNAME=https://dev.aarhusvandsportscenter.dk" >> $GITHUB_ENV
-          echo "CONTACT_MAIL_TO_EMAIL=thomas@bleptek.dk" >> $GITHUB_ENV
+          echo "CONTACT_MAIL_TO_EMAIL=mail@thomasw.dk" >> $GITHUB_ENV
+          echo "EMAIL_PASSWORD"=${{secrets.EMAIL_PASSWORD}} >> $GITHUB_ENV
           echo "CONFIGURATION=Debug" >> $GITHUB_ENV
           echo "DBCONNSTR=${{secrets.DBCONNSTR_DEV}}" >> $GITHUB_ENV
           echo "AUTH_JWTKEY=${{secrets.AUTH_JWTKEY_DEV}}" >> $GITHUB_ENV
@@ -22,6 +23,7 @@ jobs:
         run: |
           echo "HOSTNAME=https://aarhusvandsportscenter.dk" >> $GITHUB_ENV
           echo "CONTACT_MAIL_TO_EMAIL=mail@aarhusvandsportscenter.dk" >> $GITHUB_ENV
+          echo "EMAIL_PASSWORD"=${{secrets.EMAIL_PASSWORD}} >> $GITHUB_ENV
           echo "CONFIGURATION=Release" >> $GITHUB_ENV
           echo "DBCONNSTR=${{secrets.DBCONNSTR_PROD}}" >> $GITHUB_ENV
           echo "AUTH_JWTKEY=${{secrets.AUTH_JWTKEY_PROD}}" >> $GITHUB_ENV

@@ -25,9 +25,9 @@ namespace Aarhusvandsportscenter.Api
             using (var scope = host.Services.CreateScope())
             {
                 await MigrateDb(scope);
-                await SeedDb(scope);
-                await EnsureDefaultAdminAccounts(scope);
-                await EnsureDefaultRentalCategory(scope);
+                // await SeedDb(scope);
+                // await EnsureDefaultAdminAccounts(scope);
+                // await EnsureDefaultRentalCategory(scope);
             }
 
             host.Run();

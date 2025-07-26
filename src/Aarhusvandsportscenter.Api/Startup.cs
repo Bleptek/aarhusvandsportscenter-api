@@ -42,6 +42,7 @@ namespace Aarhusvandsportscenter.Api
             services.Configure<SendGridSettings>(Configuration.GetSection(nameof(Appsettings.SendGrid)));
             services.Configure<AuthorizationSettings>(Configuration.GetSection(nameof(Appsettings.Authorization)));
             services.Configure<RentalSettings>(Configuration.GetSection(nameof(Appsettings.Rental)));
+            services.Configure<SimplySmtpSettings>(Configuration.GetSection(nameof(Appsettings.SimplySmtp)));
             services.AddDbContext<AppDbContext>(opts =>
             {
                 opts.UseMySql(Configuration.GetConnectionString("DbConnection"),
@@ -64,7 +65,7 @@ namespace Aarhusvandsportscenter.Api
             });
             
             services.AddScoped<IPasswordService, PasswordService>();
-            services.AddScoped<IMailService, SendGridService>();
+            services.AddScoped<IMailService, SmtpMailService>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<ISendGridClient, SendGridClient>(serviceProvider =>
             {
