@@ -54,5 +54,5 @@ jobs:
           ftp_username: ${{secrets.FTP_USERNAME}}
           ftp_password: ${{secrets.FTP_PASSWORD}}
           ftp_remote_dir: ${{env.FTP_REMOTE_DIR}}
-          ftp_local_dir: ./src/Aarhusvandsportscenter.Api/bin/${{env.CONFIGURATION}}/net5.0/win-x86/publish/
+          ftp_local_dir: ./src/Aarhusvandsportscenter.Api/bin/${{env.CONFIGURATION}}/net6.0/win-x86/publish/
           ftp_local_appoffline_dir: ./src/Aarhusvandsportscenter.Api/app_offline/
