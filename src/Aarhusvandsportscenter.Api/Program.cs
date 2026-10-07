@@ -14,7 +14,6 @@ using Aarhusvandsportscenter.Api.Infastructure.Authorization;
 using Aarhusvandsportscenter.Api.Infastructure.Database;
 using Aarhusvandsportscenter.Api.Infastructure.Database.Entities;
 using Aarhusvandsportscenter.Api.Infastructure.Middleware;
-using Aarhusvandsportscenter.Api.Infastructure.OldDatabase;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -67,14 +66,6 @@ namespace Aarhusvandsportscenter.Api
             {
                 opts.UseMySql(configuration.GetConnectionString("DbConnection"),
                         new MySqlServerVersion(new Version(5, 7, 32))) // found in phpmyadmin by executing SELECT VERSION();
-                    // Everything from this point on is optional but helps with debugging.
-                    .EnableSensitiveDataLogging()
-                    .EnableDetailedErrors();
-            });
-            services.AddDbContext<LeschleyDbContext>(opts =>
-            {
-                opts.UseMySql(configuration.GetConnectionString("LeschleyDbConnection"),
-                    new MariaDbServerVersion(new Version(10, 4, 20))) // found in phpmyadmin by executing SELECT VERSION();
                     // Everything from this point on is optional but helps with debugging.
                     .EnableSensitiveDataLogging()
                     .EnableDetailedErrors();
