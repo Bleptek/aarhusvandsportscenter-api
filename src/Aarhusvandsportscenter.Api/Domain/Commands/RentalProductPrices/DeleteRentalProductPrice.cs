@@ -11,7 +11,7 @@ namespace Aarhusvandsportscenter.Api.Domain.Commands.RentalProducts
     {
         public record Command(int Id) : IRequest;
 
-        public class Handler : AsyncRequestHandler<Command>
+        public class Handler : IRequestHandler<Command>
         {
             private readonly AppDbContext _dbContext;
 
@@ -21,7 +21,7 @@ namespace Aarhusvandsportscenter.Api.Domain.Commands.RentalProducts
                 _dbContext = dbContext;
             }
 
-            protected override async Task Handle(Command request, CancellationToken cancellationToken)
+            public async Task Handle(Command request, CancellationToken cancellationToken)
             {
                 var entryToDelete = await _dbContext.RentalProductPrices.FirstOrDefaultAsync(x => x.Id == request.Id);
                 if (entryToDelete == null)

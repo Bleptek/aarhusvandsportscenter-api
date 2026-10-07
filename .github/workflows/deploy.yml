@@ -28,11 +28,11 @@ jobs:
           echo "DBCONNSTR=${{secrets.DBCONNSTR_PROD}}" >> $GITHUB_ENV
           echo "AUTH_JWTKEY=${{secrets.AUTH_JWTKEY_PROD}}" >> $GITHUB_ENV
           echo "FTP_REMOTE_DIR=/public_html/" >> $GITHUB_ENV
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Setup .Net
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 10.0.x
       - name: Build
         run: dotnet build
       - name: Test
@@ -54,5 +54,5 @@ jobs:
           ftp_username: ${{secrets.FTP_USERNAME}}
           ftp_password: ${{secrets.FTP_PASSWORD}}
           ftp_remote_dir: ${{env.FTP_REMOTE_DIR}}
-          ftp_local_dir: ./src/Aarhusvandsportscenter.Api/bin/${{env.CONFIGURATION}}/net6.0/win-x86/publish/
+          ftp_local_dir: ./src/Aarhusvandsportscenter.Api/bin/${{env.CONFIGURATION}}/net10.0/win-x86/publish/
           ftp_local_appoffline_dir: ./src/Aarhusvandsportscenter.Api/app_offline/

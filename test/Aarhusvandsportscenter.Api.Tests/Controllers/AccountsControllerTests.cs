@@ -11,11 +11,11 @@ using Aarhusvandsportscenter.Api.Infastructure.Database;
 
 namespace Aarhusvandsportscenter.Api.Tests.Controllers
 {
-    public class AccountsControllerTests : IClassFixture<CustomWebApplicationFactory<Startup>>
+    public class AccountsControllerTests : IClassFixture<CustomWebApplicationFactory<Program>>
     {
-        private readonly CustomWebApplicationFactory<Startup> _factory;
+        private readonly CustomWebApplicationFactory<Program> _factory;
 
-        public AccountsControllerTests(CustomWebApplicationFactory<Startup> factory)
+        public AccountsControllerTests(CustomWebApplicationFactory<Program> factory)
         {
             _factory = factory;
         }

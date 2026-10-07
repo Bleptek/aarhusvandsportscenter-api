@@ -12,7 +12,7 @@ namespace Aarhusvandsportscenter.Api.Domain.Commands.Rentals
     {
         public record Command(int Id, string Phone, bool SkipPhoneValidation) : IRequest;
 
-        public class Handler : AsyncRequestHandler<Command>
+        public class Handler : IRequestHandler<Command>
         {
             private readonly AppDbContext _dbContext;
             private readonly IMailService _mailService;
@@ -25,7 +25,7 @@ namespace Aarhusvandsportscenter.Api.Domain.Commands.Rentals
                 _mailService = mailService;
             }
 
-            protected override async Task Handle(Command request, CancellationToken cancellationToken)
+            public async Task Handle(Command request, CancellationToken cancellationToken)
             {
                 var rentalToDelete = await _dbContext.Rentals.FirstOrDefaultAsync(x =>
                     x.Id == request.Id &&

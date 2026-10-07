@@ -14,11 +14,11 @@ using Aarhusvandsportscenter.Api.Controllers.RentalProducts;
 
 namespace Aarhusvandsportscenter.Api.Tests.Controllers
 {
-    public class RentalProductsControllerTests : IClassFixture<CustomWebApplicationFactory<Startup>>
+    public class RentalProductsControllerTests : IClassFixture<CustomWebApplicationFactory<Program>>
     {
-        private readonly CustomWebApplicationFactory<Startup> _factory;
+        private readonly CustomWebApplicationFactory<Program> _factory;
 
-        public RentalProductsControllerTests(CustomWebApplicationFactory<Startup> factory)
+        public RentalProductsControllerTests(CustomWebApplicationFactory<Program> factory)
         {
             _factory = factory;
         }
