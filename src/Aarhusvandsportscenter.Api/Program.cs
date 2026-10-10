@@ -58,7 +58,6 @@ namespace Aarhusvandsportscenter.Api
 
             services.Configure<Appsettings>(configuration);
             var appsettings = configuration.Get<Appsettings>();
-            services.Configure<SendGridSettings>(configuration.GetSection(nameof(Appsettings.SendGrid)));
             services.Configure<AuthorizationSettings>(configuration.GetSection(nameof(Appsettings.Authorization)));
             services.Configure<RentalSettings>(configuration.GetSection(nameof(Appsettings.Rental)));
             services.Configure<SimplySmtpSettings>(configuration.GetSection(nameof(Appsettings.SimplySmtp)));

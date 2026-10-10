@@ -4,8 +4,6 @@ description: substitues environment variables for dev and production
 inputs:
   hostname:
     required: true
-  sendgrid_apikey:
-    required: true
   db_connectionstring:
     required: true
   auth_jwtkey:
@@ -27,8 +25,7 @@ runs:
         Authorization.Audience: "${{inputs.hostname}}/api"
         Authorization.JwtKey: ${{inputs.auth_jwtkey}}
         SimplySmtp.Password: ${{inputs.email_password}}
-        SendGrid.ApiKey: ${{inputs.sendgrid_apikey}}
-        SendGrid.RentalCancellationLink: "${{inputs.hostname}}/booking/aflys/{id}"
-        SendGrid.RentalFinishLink: "${{inputs.hostname}}/booking/done/{id}/{phone}"
-        SendGrid.ResetPasswordLink: "${{inputs.hostname}}/opdater-adganskode?passwordToken={passwordToken}"
-        SendGrid.ContactMailToEmail: "${{inputs.contact_mail_to_email}}"
+        SimplySmtp.RentalCancellationLink: "${{inputs.hostname}}/booking/aflys/{id}"
+        SimplySmtp.RentalFinishLink: "${{inputs.hostname}}/booking/done/{id}/{phone}"
+        SimplySmtp.ResetPasswordLink: "${{inputs.hostname}}/opdater-adganskode?passwordToken={passwordToken}"
+        SimplySmtp.ContactMailToEmail: "${{inputs.contact_mail_to_email}}"

@@ -1,13 +1,19 @@
 using System;
 using System.Linq;
+using System.Net;
+using System.Net.Mail;
+using System.Text;
 using System.Threading.Tasks;
-using Aarhusvandsportscenter.Api;
 using Aarhusvandsportscenter.Api.Infastructure.Database.Entities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Aarhusvandsportscenter.Api.Domain.Services
 {
+    /// <summary>
+    /// Sends mail through Simply's SMTP relay. Replaces the previous SendGrid dynamic-template based
+    /// implementation; the 4 emails below are hand-written HTML equivalents of the old SendGrid templates.
+    /// </summary>
     public class SmtpMailService : IMailService
     {
         private readonly ILogger<SmtpMailService> _logger;
@@ -23,184 +29,135 @@ namespace Aarhusvandsportscenter.Api.Domain.Services
         }
 
         /// <inheritdoc/>
-        // public async Task SendRentalConfirmationEmail(RentalEntity rental, decimal totalPrice)
-        // {
-        //     var dto = new SendGridMailDto(
-        //         templateId: _sendGridSettings.RentalConfirmationTemplateId,
-        //         templateData: new
-        //         {
-        //             rentalId = rental.Id,
-        //             paymentMethod = rental.PaymentMethod.ToString(),
-        //             dealCoupon = rental.DealCoupon,
-        //             fullName = rental.FullName,
-        //             items = rental.Items
-        //                 .Select(x => new
-        //                 {
-        //                     count = x.Count,
-        //                     name = x.Product.Name
-        //                 })
-        //                 .ToArray(),
-        //             startDate = rental.StartDate,
-        //             endDate = rental.EndDate,
-        //             totalPrice = totalPrice,
-        //             cancellationLink = _sendGridSettings.RentalCancellationLink.Replace("{id}", rental.Id.ToString()),
-        //             finishLink = _sendGridSettings.RentalFinishLink
-        //                 .Replace("{id}", rental.Id.ToString())
-        //                 .Replace("{phone}", rental.Phone), // this might be prone to errors if a phonenumber contains "+" and stuff
-        //         },
-        //         from: new EmailAddress(_sendGridSettings.SendFromEmail, _sendGridSettings.SendFromName),
-        //         to: new EmailAddress(rental.EmailAddress, rental.FullName),
-        //         replyTo: null
-        //     );
-
-        //     await SendEmail(dto);
-        // }
-
-        /// <inheritdoc/>
         public async Task SendRentalConfirmationEmail(RentalEntity rental, decimal totalPrice)
         {
-            if (rental == null) throw new ArgumentNullException(nameof(rental)); var bodyHtml = $@"
-                <p>Hej {rental.FullName}!</p>
-                <br>
-                <p>Du har hermed fra {rental.StartDate:dd/MM-yyyy} til {rental.EndDate:dd/MM-yyyy} booket:</p>
-                {string.Join("<br>", rental.Items.Select(x => $"- {x.Count} {x.Product.Name}"))}
-                <br>
-                {rental.PaymentMethod switch
+            if (rental == null) throw new ArgumentNullException(nameof(rental));
+
+            var itemsHtml = string.Join(Environment.NewLine, rental.Items.Select(x => $"<p>- {x.Count} {x.Product.Name}</p>"));
+            var paymentMethodHtml = rental.PaymentMethod switch
             {
                 PaymentMethodEnum.DealCoupon => $"<p>Du har valgt Deal-bevis som betalingsmetode med kuponen: {rental.DealCoupon}</p>",
-                PaymentMethodEnum.MobilePay => $"<p>Du har valgt MobilePay som betalingsmetode.</p><p>Medmindre andet er aftalt er den samlede pris {totalPrice} kr.</p><p>Ved betaling bedes du angive referencenummeret i kommentarfeltet: {rental.Id}</p>",
-                PaymentMethodEnum.BankTransfer => $"<p>Du har valgt bankoverførsel som betalingsmetode.</p><p>Medmindre andet er aftalt er den samlede pris {totalPrice} kr.</p><p>Ved overførsel bedes du angive referencenummeret i kommentarfeltet: {rental.Id}</p><p>Kontooplysninger: Nordea, reg 1971, konto 6279257276.</p>",
+                PaymentMethodEnum.MobilePay => $"<p>Du har valgt MobilePay som betalingsmetode.</p><p>Medmindre andet er aftalt er den samlede pris {totalPrice}kr.</p><p>Ved betaling bedes du angive referencenummeret i kommentarfeltet: {rental.Id}</p>",
+                PaymentMethodEnum.BankTransfer => $"<p>Du har valgt bankoverførsel som betalingsmetode.</p><p>Medmindre andet er aftalt er den samlede pris {totalPrice}kr.</p><p>Ved overførsel bedes du angive referencenummeret i kommentarfeltet: {rental.Id}</p><p>Kontooplysninger: Nordea, reg 1971, konto 6279257276.</p>",
                 _ => ""
-            }}
+            };
+
+            var bodyHtml = WrapWithPreheader("Du har booket udstyr hos Aarhus Vandsportscenter", $@"
+                <p>Hej {rental.FullName} !</p>
+                <br>
+                <p>Du har hermed fra {FormatDate(rental.StartDate)} til {FormatDate(rental.EndDate)} booket:</p>
+                {itemsHtml}
+                <br>
+                {paymentMethodHtml}
                 <br>
                 <p>Du kan annullere din booking <a href='{_simplySmtpSettings.RentalCancellationLink.Replace("{id}", rental.Id.ToString())}' target='_blank'>her</a> eller ved at kontakte os.</p>
                 <p>Når du er færdig med at bruge udstyret bedes du melde det ledigt <a href='{_simplySmtpSettings.RentalFinishLink.Replace("{id}", rental.Id.ToString()).Replace("{phone}", rental.Phone)}' target='_blank'>her</a>.</p>
                 <p>Du er velkommen til at ringe til Ken på 23244171 for yderligere info et par dage før du skal på vandet.</p>
                 <p>Mvh Århus Vandsportscenter</p>
-            ";
+            ");
 
-            await SendEmailUsingSmtp("Din booking hos Århus Vandsportscenter", bodyHtml, rental.EmailAddress);
+            await SendEmailUsingSmtp("Booking bekræftelse", bodyHtml, rental.EmailAddress);
             _logger.LogInformation("Sent rental confirmation email to {EmailAddress} for rental {RentalId}", rental.EmailAddress, rental.Id);
-        }
-
-        /// <inheritdoc/>
-        public async Task SendRentalFinishedEmail(RentalEntity rental)
-        {
-            throw new NotImplementedException("SendRentalFinishedEmail is not implemented for SmtpMailService.");
         }
 
         /// <inheritdoc/>
         public async Task SendRentalCanceledEmail(RentalEntity rental)
         {
-            throw new NotImplementedException("SendRentalCanceledEmail is not implemented for SmtpMailService.");
+            if (rental == null) throw new ArgumentNullException(nameof(rental));
+
+            var bodyHtml = WrapWithPreheader("Din booking hos Aarhus Vandsportscenter er aflyst", $@"
+                <p>Hej {rental.FullName} !</p>
+                <br>
+                <p>Din booking med referencenummer {rental.Id} i perioden {FormatDate(rental.StartDate)} til {FormatDate(rental.EndDate)} er hermed aflyst.</p>
+                <br>
+                <p>Mvh Århus Vandsportscenter</p>
+            ");
+
+            await SendEmailUsingSmtp("Booking annulleret", bodyHtml, rental.EmailAddress);
+            _logger.LogInformation("Sent rental cancellation email to {EmailAddress} for rental {RentalId}", rental.EmailAddress, rental.Id);
         }
 
         /// <inheritdoc/>
         public async Task SendResetPasswordEmail(string email, string fullName, Guid resetPasswordToken)
         {
-            throw new NotImplementedException("SendResetPasswordEmail is not implemented for SmtpMailService.");
+            if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("Email must be provided", nameof(email));
+
+            var resetLink = _simplySmtpSettings.ResetPasswordLink.Replace("{passwordToken}", resetPasswordToken.ToString());
+            var bodyHtml = WrapWithPreheader("Vælg ny adgangskode", $@"
+                <p>Hej {fullName}</p>
+                <br>
+                <p>Vælg ny adgangskode <a href='{resetLink}' target='_blank'>her</a></p>
+            ");
+
+            await SendEmailUsingSmtp("Ny adgangskode", bodyHtml, email);
+            _logger.LogInformation("Sent reset password email to {EmailAddress}", email);
         }
 
         /// <inheritdoc/>
         public async Task SendContactEmail(string fromEmail, string fullName, string comment)
         {
-            throw new NotImplementedException("SendContactEmail is not implemented for SmtpMailService.");
+            if (string.IsNullOrWhiteSpace(fromEmail)) throw new ArgumentException("FromEmail must be provided", nameof(fromEmail));
+
+            var bodyHtml = WrapWithPreheader($"Fra {fullName}", $@"
+                <p>Navn: {fullName}</p>
+                <p>Mail: {fromEmail}</p>
+                <p>Kommentar: {comment}</p>
+            ");
+
+            await SendEmailUsingSmtp(
+                subject: "Aarhus Vandsportscenter kontaktbesked",
+                bodyHtml: bodyHtml,
+                toEmail: _simplySmtpSettings.ContactMailToEmail,
+                fromName: fullName,
+                replyToEmail: fromEmail,
+                replyToName: fullName);
+            _logger.LogInformation("Sent contact email from {FromEmail} to {ToEmail}", fromEmail, _simplySmtpSettings.ContactMailToEmail);
         }
 
-        // /// <inheritdoc/>
-        // public async Task SendRentalCanceledEmail(RentalEntity rental)
-        // {
-        //     var dto = new SendGridMailDto(
-        //         templateId: _sendGridSettings.RentalCancellationTemplateId,
-        //         templateData: new
-        //         {
-        //             rentalId = rental.Id,
-        //             fullName = rental.FullName,
-        //             startDate = rental.StartDate,
-        //             endDate = rental.EndDate
-        //         },
-        //         from: new EmailAddress(_sendGridSettings.SendFromEmail, _sendGridSettings.SendFromName),
-        //         to: new EmailAddress(rental.EmailAddress, rental.FullName),
-        //         replyTo: null
-        //     );
+        /// <summary>
+        /// Wraps <paramref name="contentHtml"/> with a hidden preheader, which most mail clients show as the
+        /// inbox preview text instead of the start of the visible body.
+        /// </summary>
+        private static string WrapWithPreheader(string preheaderText, string contentHtml) =>
+            $@"<div style=""display:none;max-height:0px;overflow:hidden;"">{preheaderText}</div>
+            {contentHtml}";
 
-        //     await SendEmail(dto);
-        // }
+        /// <summary>
+        /// Formats a date as "D/M-YYYY" (day and month without leading zeros), matching the old SendGrid templates.
+        /// </summary>
+        private static string FormatDate(DateTime date) => $"{date.Day}/{date.Month}-{date.Year}";
 
-        // public async Task SendResetPasswordEmail(string email, string fullName, Guid resetPasswordToken)
-        // {
-        //     var dto = new SendGridMailDto(
-        //         templateId: _sendGridSettings.ResetPasswordTemplateId,
-        //         templateData: new
-        //         {
-        //             fullName = fullName,
-        //             resetLink = _sendGridSettings.ResetPasswordLink.Replace("{passwordToken}", resetPasswordToken.ToString())
-        //         },
-        //         from: new EmailAddress(_sendGridSettings.SendFromEmail, _sendGridSettings.SendFromName),
-        //         to: new EmailAddress(email, fullName),
-        //         replyTo: null
-        //     );
-
-        //     await SendEmail(dto);
-        // }
-
-        // public async Task SendContactEmail(string fromEmail, string fullName, string comment)
-        // {
-        //     var dto = new SendGridMailDto(
-        //         templateId: _sendGridSettings.ContactTemplateId,
-        //         templateData: new
-        //         {
-        //             fullName = fullName,
-        //             email = fromEmail,
-        //             comment = comment
-        //         },
-        //         from: new EmailAddress(_sendGridSettings.SendFromEmail, fullName),
-        //         to: new EmailAddress(_sendGridSettings.ContactMailToEmail, _sendGridSettings.ContactMailToName),
-        //         replyTo: new EmailAddress(fromEmail, fullName)
-        //     );
-
-        //     await SendEmail(dto);
-        // }
-
-        // rewrite SendEmail to use SMTP instead of SendGrid
-        protected virtual async Task SendEmailUsingSmtp(string subject, string bodyHtml, string toEmail)
+        protected virtual async Task SendEmailUsingSmtp(
+            string subject,
+            string bodyHtml,
+            string toEmail,
+            string fromName = null,
+            string replyToEmail = null,
+            string replyToName = null)
         {
-
-            using var smtpClient = new System.Net.Mail.SmtpClient(_simplySmtpSettings.Host, _simplySmtpSettings.Port)
+            using var smtpClient = new SmtpClient(_simplySmtpSettings.Host, _simplySmtpSettings.Port)
             {
-                Credentials = new System.Net.NetworkCredential(_simplySmtpSettings.Email, _simplySmtpSettings.Password),
+                Credentials = new NetworkCredential(_simplySmtpSettings.Email, _simplySmtpSettings.Password),
                 EnableSsl = true
             };
 
-            var mailMessage = new System.Net.Mail.MailMessage
+            using var mailMessage = new MailMessage
             {
-                From = new System.Net.Mail.MailAddress(_simplySmtpSettings.SendFromEmail, _simplySmtpSettings.SendFromName),
+                From = new MailAddress(_simplySmtpSettings.SendFromEmail, fromName ?? _simplySmtpSettings.SendFromName, Encoding.UTF8),
                 Subject = subject,
-                To = { new System.Net.Mail.MailAddress(toEmail) },
-                ReplyToList = { new System.Net.Mail.MailAddress(_simplySmtpSettings.SendFromEmail) },
+                SubjectEncoding = Encoding.UTF8,
                 Body = bodyHtml,
+                BodyEncoding = Encoding.UTF8,
+                HeadersEncoding = Encoding.UTF8,
                 IsBodyHtml = true
             };
+            mailMessage.To.Add(new MailAddress(toEmail));
+            mailMessage.ReplyToList.Add(new MailAddress(
+                replyToEmail ?? _simplySmtpSettings.SendFromEmail,
+                replyToName ?? _simplySmtpSettings.SendFromName,
+                Encoding.UTF8));
 
             await smtpClient.SendMailAsync(mailMessage);
         }
-
-        // protected virtual async Task SendEmail(SendGridMailDto mailDto)
-        // {
-        //     var msg = new SendGridMessage();
-        //     msg.AddTo(mailDto.To.Email, mailDto.To.Name);
-        //     if (mailDto.ReplyTo != null)
-        //         msg.SetReplyTo(new EmailAddress(mailDto.ReplyTo.Email, mailDto.ReplyTo.Name));
-        //     msg.SetFrom(mailDto.From.Email, mailDto.From.Name);
-        //     msg.SetTemplateId(mailDto.TemplateId);
-        //     msg.SetTemplateData(mailDto.TemplateData);
-
-        //     var response = await _sendGridClient.SendEmailAsync(msg);
-        //     if (!response.IsSuccessStatusCode)
-        //     {
-        //         var content = await response.Body.ReadAsStringAsync();
-        //         throw new Exception($"SendGrid invoked sending to with template {msg.TemplateId}, response {content} {response.Body}");
-        //     }
-        // }
     }
 }

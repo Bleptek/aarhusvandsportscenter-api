@@ -4,7 +4,6 @@ namespace Aarhusvandsportscenter.Api
     {
         public string ASPNETCORE_ENVIRONMENT { get; set; }
         public ConnectionStrings ConnectionStrings { get; set; }
-        public SendGridSettings SendGrid { get; set; }
         public AuthorizationSettings Authorization { get; set; }
         public SimplySmtpSettings SimplySmtp { get; set; }
         public DefaultAdminAccount[] DefaultAdminAccounts { get; set; } = new DefaultAdminAccount[0];
@@ -16,22 +15,6 @@ namespace Aarhusvandsportscenter.Api
     public class ConnectionStrings
     {
         public string DbConnection { get; set; }
-    }
-
-    public class SendGridSettings
-    {
-        public string ApiKey { get; set; }
-        public string SendFromName { get; set; }
-        public string SendFromEmail { get; set; }
-        public string ResetPasswordTemplateId { get; set; }
-        public string ResetPasswordLink { get; set; }
-        public string RentalConfirmationTemplateId { get; set; }
-        public string RentalCancellationTemplateId { get; set; }
-        public string RentalCancellationLink { get; set; }
-        public string RentalFinishLink { get; set; }
-        public string ContactTemplateId { get; set; }
-        public string ContactMailToName { get; set; }
-        public string ContactMailToEmail { get; set; }
     }
 
     public class SimplySmtpSettings

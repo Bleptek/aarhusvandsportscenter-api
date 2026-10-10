@@ -95,8 +95,7 @@ In VS Code a `launch.json` configuration can set them in an `env` object:
 |---|---|
 | `ConnectionStrings:DbConnection` | MySQL connection string. |
 | `Authorization` | JWT `JwtKey`, `Issuer`, `Audience` and `ExpirationInSeconds`. |
-| `SimplySmtp` | SMTP account and links used for outgoing mail (password reset, rental confirmation/cancellation, contact form). The app currently sends mail through this. |
-| `SendGrid` | SendGrid settings and template ids. Not used while the SendGrid package is commented out in the csproj. |
+| `SimplySmtp` | SMTP account and links used for outgoing mail (password reset, rental confirmation/cancellation, contact form). The app sends mail through Simply's SMTP relay via this. |
 | `CreateDefaultAdminAccounts` / `DefaultAdminAccounts` | Admin accounts to create on startup. |
 | `Rental:DefaultCategoryName` | Name of the default rental category. |
 
@@ -151,11 +150,11 @@ GitHub Actions (`.github/workflows/deploy.yml`) is used as CI/CD. A push to one 
 The pipeline then:
 
 1. Runs `dotnet build` and `dotnet test`.
-2. Substitutes environment specific values (hostname/links, contact email, SendGrid key, connection string, JWT key) into `appsettings.json` from GitHub secrets.
+2. Substitutes environment specific values (hostname/links, contact email, SMTP password, connection string, JWT key) into `appsettings.json` from GitHub secrets.
 3. Publishes a self-contained `win-x86` build.
 4. Uploads it by FTP, using an `app_offline.htm` file while the files are replaced.
 
-Secrets used: `DBCONNSTR_DEV`, `DBCONNSTR_PROD`, `AUTH_JWTKEY_DEV`, `AUTH_JWTKEY_PROD`, `SENDGRID_APIKEY`, `EMAIL_PASSWORD`, `FTP_SERVER`, `FTP_USERNAME` and `FTP_PASSWORD`.
+Secrets used: `DBCONNSTR_DEV`, `DBCONNSTR_PROD`, `AUTH_JWTKEY_DEV`, `AUTH_JWTKEY_PROD`, `EMAIL_PASSWORD`, `FTP_SERVER`, `FTP_USERNAME` and `FTP_PASSWORD`.
 
 In the csproj file the following applies to the Debug configuration:
 
