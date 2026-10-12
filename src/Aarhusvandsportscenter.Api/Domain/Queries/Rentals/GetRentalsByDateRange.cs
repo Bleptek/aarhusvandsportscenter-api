@@ -32,6 +32,7 @@ namespace Aarhusvandsportscenter.Api.Domain.Queries.Rentals
                     .Include(x => x.Items)
                         .ThenInclude(i => i.Product)
                     .Where(x =>
+                        !x.Done &&
                         x.StartDate.Date <= request.EndDate &&
                         x.EndDate.Date >= request.StartDate)
                     .ToArrayAsync();
