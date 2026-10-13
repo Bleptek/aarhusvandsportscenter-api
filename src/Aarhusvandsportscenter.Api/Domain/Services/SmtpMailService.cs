@@ -34,11 +34,12 @@ namespace Aarhusvandsportscenter.Api.Domain.Services
             if (rental == null) throw new ArgumentNullException(nameof(rental));
 
             var itemsHtml = string.Join(Environment.NewLine, rental.Items.Select(x => $"<p>- {x.Count} {x.Product.Name}</p>"));
+            var totalPriceText = FormatPrice(totalPrice);
             var paymentMethodHtml = rental.PaymentMethod switch
             {
                 PaymentMethodEnum.DealCoupon => $"<p>Du har valgt Deal-bevis som betalingsmetode med kuponen: {rental.DealCoupon}</p>",
-                PaymentMethodEnum.MobilePay => $"<p>Du har valgt MobilePay som betalingsmetode.</p><p>Medmindre andet er aftalt er den samlede pris {totalPrice}kr.</p><p>Ved betaling bedes du angive referencenummeret i kommentarfeltet: {rental.Id}</p>",
-                PaymentMethodEnum.BankTransfer => $"<p>Du har valgt bankoverførsel som betalingsmetode.</p><p>Medmindre andet er aftalt er den samlede pris {totalPrice}kr.</p><p>Ved overførsel bedes du angive referencenummeret i kommentarfeltet: {rental.Id}</p><p>Kontooplysninger: Nordea, reg 1971, konto 6279257276.</p>",
+                PaymentMethodEnum.MobilePay => $"<p>Du har valgt MobilePay som betalingsmetode.</p><p>Medmindre andet er aftalt er den samlede pris {totalPriceText}kr.</p><p>Ved betaling bedes du angive referencenummeret i kommentarfeltet: {rental.Id}</p>",
+                PaymentMethodEnum.BankTransfer => $"<p>Du har valgt bankoverførsel som betalingsmetode.</p><p>Medmindre andet er aftalt er den samlede pris {totalPriceText}kr.</p><p>Ved overførsel bedes du angive referencenummeret i kommentarfeltet: {rental.Id}</p><p>Kontooplysninger: Nordea, reg 1971, konto 6279257276.</p>",
                 _ => ""
             };
 
@@ -126,6 +127,14 @@ namespace Aarhusvandsportscenter.Api.Domain.Services
         /// Formats a date as "D/M-YYYY" (day and month without leading zeros), matching the old SendGrid templates.
         /// </summary>
         private static string FormatDate(DateTime date) => $"{date.Day}/{date.Month}-{date.Year}";
+
+        // Max 2 decimals; whole amounts are shown without decimals (e.g. "1500"), others as "1500,50"
+        private static string FormatPrice(decimal price)
+        {
+            var rounded = Math.Round(price, 2, MidpointRounding.AwayFromZero);
+            var format = rounded == Math.Truncate(rounded) ? "0" : "0.00";
+            return rounded.ToString(format, System.Globalization.CultureInfo.GetCultureInfo("da-DK"));
+        }
 
         protected virtual async Task SendEmailUsingSmtp(
             string subject,
