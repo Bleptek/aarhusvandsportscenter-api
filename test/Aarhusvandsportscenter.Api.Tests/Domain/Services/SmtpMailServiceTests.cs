@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Aarhusvandsportscenter.Api;
@@ -59,11 +59,11 @@ namespace Aarhusvandsportscenter.Api.Tests.Domain.Services
             Assert.Equal(rental.EmailAddress, email.ToEmail);
             Assert.Contains("Du har booket udstyr hos Aarhus Vandsportscenter", email.BodyHtml); // preheader
             Assert.Contains("Hej Thomas Willumsen !", email.BodyHtml);
-            Assert.Contains("fra 5/3-2024 til 9/3-2024 booket", email.BodyHtml); // no leading zeroes
-            Assert.Contains("<p>- 2 Kajak</p>", email.BodyHtml);
+            Assert.Contains("fra <strong>5/3-2024</strong> til <strong>9/3-2024</strong> booket", email.BodyHtml); // no leading zeroes
+            Assert.Contains("2 Kajak</li>", email.BodyHtml);
             Assert.Contains("Du har valgt MobilePay som betalingsmetode.", email.BodyHtml);
-            Assert.Contains("den samlede pris 1500kr.", email.BodyHtml); // no space before "kr."
-            Assert.Contains("referencenummeret i kommentarfeltet: 42", email.BodyHtml);
+            Assert.Contains("den samlede pris <strong>1500kr.</strong>", email.BodyHtml); // no space before "kr."
+            Assert.Contains("referencenummeret i kommentarfeltet: <strong>42</strong>", email.BodyHtml);
             Assert.Contains("http://localhost:3000/booking/aflys/42", email.BodyHtml);
             Assert.Contains("http://localhost:3000/booking/done/42/+45 12 12 12 12", email.BodyHtml);
         }
@@ -77,7 +77,7 @@ namespace Aarhusvandsportscenter.Api.Tests.Domain.Services
             await service.SendRentalConfirmationEmail(rental, 0m);
 
             var email = Assert.Single(service.SentEmails);
-            Assert.Contains("Du har valgt Deal-bevis som betalingsmetode med kuponen: DEAL123", email.BodyHtml);
+            Assert.Contains("Du har valgt Deal-bevis som betalingsmetode med kuponen: <strong>DEAL123</strong>", email.BodyHtml);
         }
 
         [Fact]
@@ -90,7 +90,7 @@ namespace Aarhusvandsportscenter.Api.Tests.Domain.Services
 
             var email = Assert.Single(service.SentEmails);
             Assert.Contains("Du har valgt bankoverførsel som betalingsmetode.", email.BodyHtml);
-            Assert.Contains("den samlede pris 1500kr.", email.BodyHtml);
+            Assert.Contains("den samlede pris <strong>1500kr.</strong>", email.BodyHtml);
             Assert.Contains("Nordea, reg 1971, konto 6279257276.", email.BodyHtml);
         }
 
@@ -156,9 +156,21 @@ namespace Aarhusvandsportscenter.Api.Tests.Domain.Services
             Assert.Equal("visitor@example.com", email.ReplyToEmail);
             Assert.Equal("Jane Doe", email.ReplyToName);
             Assert.Contains("Fra Jane Doe", email.BodyHtml); // preheader
-            Assert.Contains("Navn: Jane Doe", email.BodyHtml);
-            Assert.Contains("Mail: visitor@example.com", email.BodyHtml);
+            Assert.Contains("Navn: <strong>Jane Doe</strong>", email.BodyHtml);
+            Assert.Contains("visitor@example.com</a>", email.BodyHtml);
             Assert.Contains("Kommentar: Hvornår kan jeg leje en kajak?", email.BodyHtml);
+        }
+
+        [Fact]
+        public async System.Threading.Tasks.Task SendContactEmail_HtmlEncodesUserInput()
+        {
+            var service = CreateService();
+
+            await service.SendContactEmail("visitor@example.com", "Jane Doe", "<script>alert(1)</script>");
+
+            var email = Assert.Single(service.SentEmails);
+            Assert.DoesNotContain("<script>", email.BodyHtml);
+            Assert.Contains("&lt;script&gt;", email.BodyHtml);
         }
     }
 }
