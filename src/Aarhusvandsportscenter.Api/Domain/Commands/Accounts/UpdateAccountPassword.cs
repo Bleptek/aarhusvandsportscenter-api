@@ -13,7 +13,7 @@ namespace Aarhusvandsportscenter.Api.Domain.Commands.Accounts
     {
         public record Command(Guid ResetPasswordToken, string Password) : IRequest;
 
-        public class Handler : AsyncRequestHandler<Command>
+        public class Handler : IRequestHandler<Command>
         {
             private readonly AppDbContext _dbContext;
             private readonly IPasswordService _passwordService;
@@ -24,7 +24,7 @@ namespace Aarhusvandsportscenter.Api.Domain.Commands.Accounts
                 _passwordService = passwordService;
             }
 
-            protected override async Task Handle(Command request, CancellationToken cancellationToken)
+            public async Task Handle(Command request, CancellationToken cancellationToken)
             {
                 var account = await _dbContext.Accounts.FirstOrDefaultAsync(x => x.ResetPasswordToken == request.ResetPasswordToken);
                 if (account == null)

@@ -57,7 +57,7 @@ namespace Aarhusvandsportscenter.Api.Domain.Commands.Rentals
             private async Task<RentalEntity[]> GetRentalsSpanningPeriod(Command request) => 
                 await _dbContext.Rentals
                     .Include(x => x.Items)
-                    .Where(x => x.StartDate.Date <= request.Rental.EndDate.Date && x.EndDate.Date >= request.Rental.StartDate.Date)
+                    .Where(x => !x.Done && x.StartDate.Date <= request.Rental.EndDate.Date && x.EndDate.Date >= request.Rental.StartDate.Date)
                     .ToArrayAsync();
 
             private static decimal CalculateTotalPrice(RentalEntity newRental, RentalProductEntity[] allProducts)

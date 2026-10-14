@@ -16,11 +16,11 @@ using System.Reflection;
 
 namespace Aarhusvandsportscenter.Api.Tests.Controllers
 {
-    public class ContentPagesControllerTests : IClassFixture<CustomWebApplicationFactory<Startup>>
+    public class ContentPagesControllerTests : IClassFixture<CustomWebApplicationFactory<Program>>
     {
-        private readonly CustomWebApplicationFactory<Startup> _factory;
+        private readonly CustomWebApplicationFactory<Program> _factory;
 
-        public ContentPagesControllerTests(CustomWebApplicationFactory<Startup> factory)
+        public ContentPagesControllerTests(CustomWebApplicationFactory<Program> factory)
         {
             _factory = factory;
         }

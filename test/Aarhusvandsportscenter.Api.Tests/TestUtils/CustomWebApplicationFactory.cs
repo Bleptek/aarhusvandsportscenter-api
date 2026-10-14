@@ -1,5 +1,5 @@
 using System;
-using System.Net.Http;
+using System.Linq;using System.Net.Http;
 using Aarhusvandsportscenter.Api.Tests.TestUtils.Stubs;
 using Aarhusvandsportscenter.Api.Infastructure.Database.Entities;
 using Aarhusvandsportscenter.Api.Domain.Services;
@@ -50,6 +50,14 @@ namespace Aarhusvandsportscenter.Api.Tests.TestUtils
             {
                 // Remove the app's ApplicationDbContext registration which happened during Startup.cs. Override it for testing.
                 services.RemoveAll(typeof(DbContextOptions<AppDbContext>));
+                // EF Core 9+ keeps the provider configuration in a separate (non-public) registration that must be removed as well
+                var optionsConfigurations = services
+                    .Where(x => x.ServiceType.IsGenericType
+                        && x.ServiceType.Name.StartsWith("IDbContextOptionsConfiguration")
+                        && x.ServiceType.GenericTypeArguments[0] == typeof(AppDbContext))
+                    .ToList();
+                foreach (var descriptor in optionsConfigurations)
+                    services.Remove(descriptor);
 
                 var dbName = Guid.NewGuid().ToString();
                 // Add ApplicationDbContext using an in-memory database for testing.

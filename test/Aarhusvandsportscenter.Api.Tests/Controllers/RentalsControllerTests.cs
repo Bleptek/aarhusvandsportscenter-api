@@ -14,11 +14,11 @@ using Aarhusvandsportscenter.Api.Controllers.RentalCategories;
 
 namespace Aarhusvandsportscenter.Api.Tests.Controllers
 {
-    public class RentalsControllerTests : IClassFixture<CustomWebApplicationFactory<Startup>>
+    public class RentalsControllerTests : IClassFixture<CustomWebApplicationFactory<Program>>
     {
-        private readonly CustomWebApplicationFactory<Startup> _factory;
+        private readonly CustomWebApplicationFactory<Program> _factory;
 
-        public RentalsControllerTests(CustomWebApplicationFactory<Startup> factory)
+        public RentalsControllerTests(CustomWebApplicationFactory<Program> factory)
         {
             _factory = factory;
         }
@@ -456,6 +456,51 @@ namespace Aarhusvandsportscenter.Api.Tests.Controllers
                 Assert.Single(x.Items);
                 Assert.NotNull(x.Items.First().ProductName);
             });
+        }
+
+        [Fact]
+        public async Task GetRentalsDetailed_SupportsAllLhsOperators()
+        {
+            // Arrange
+            var categories = new List<RentalCategoryEntity>(){
+                new RentalCategoryEntity("lhs1", "red", false),
+                new RentalCategoryEntity("lhs2", "red", false),
+                new RentalCategoryEntity("lhs3", "red", false)
+            };
+            var product = new RentalProductEntity("kajak", "kajakker", 5){
+                Prices = new List<RentalProductPriceEntity>(){ new RentalProductPriceEntity(5, 100) }
+            };
+            Func<List<RentalItemEntity>> items = () => new List<RentalItemEntity>(){
+                new RentalItemEntity{ Count = 5, Product = product }
+            };
+
+            using (var appDbContext = _factory.GetScopedServiceProvider().GetService<AppDbContext>())
+            {
+                appDbContext.Rentals.AddRange(new List<RentalEntity>(){
+                    new RentalEntity("thomas", "11111111", "asd@mail.com", new DateTime(2021, 1, 20), new DateTime(2021, 1, 20)){Category = categories[0],Items = items()},
+                    new RentalEntity("thomas", "11111111", "asd@mail.com", new DateTime(2021, 1, 25), new DateTime(2021, 1, 25)){Category = categories[0],Items = items()},
+                    new RentalEntity("thomas", "11111111", "asd@mail.com", new DateTime(2021, 1, 29), new DateTime(2021, 1, 29)){Category = categories[1],Items = items()},
+                    new RentalEntity("thomas", "11111111", "asd@mail.com", new DateTime(2021, 2, 1), new DateTime(2021, 2, 1)){Category = categories[1],Items = items()},
+                    new RentalEntity("thomas", "11111111", "asd@mail.com", new DateTime(2021, 1, 25), new DateTime(2021, 1, 25)){Category = categories[2],Items = items()},
+                });
+                appDbContext.SaveChanges();
+            }
+
+            var allIds = string.Join(",", categories.Select(x => x.Id));
+            var httpClient = _factory.CreateNewHttpClient(true);
+
+            async Task<int> Count(string query)
+            {
+                var response = await httpClient.GetAsync($"/api/v1/rentals/detailed?{query}");
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                var result = await response.DeserializeHttpResponse<IEnumerable<RentalResponse>>();
+                return result.Count();
+            }
+
+            // Act + Assert
+            Assert.Equal(2, await Count($"categoryId[in]={allIds}&categoryId[nin]={categories[2].Id}&endDate[gte]=2021-01-25&endDate[lte]=2021-01-29"));
+            Assert.Equal(2, await Count($"categoryId[eq]={categories[1].Id}"));
+            Assert.Equal(2, await Count($"categoryId[in]={allIds}&categoryId[ne]={categories[2].Id}&startDate[lte]=2021-01-25"));
         }
 
         [Fact]

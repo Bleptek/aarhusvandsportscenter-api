@@ -94,14 +94,13 @@ namespace Aarhusvandsportscenter.Api.Controllers.Rentals
         }
 
         /// <summary>
-        /// Get all rental rentals by date
+        /// Get all unfinished rentals by date.
         /// </summary>
         [HttpGet(Name = nameof(GetRentals))]
         [ProducesResponseType((int)HttpStatusCode.OK)]
         public async Task<ActionResult<IEnumerable<RentalCompactResponse>>> GetRentals(
             [FromQuery, Required] DateTime startDate,
             [FromQuery, Required] DateTime endDate
-
         )
         {
             var rentals = await _mediator.Send(new GetRentalsByDateRange.Query(startDate, endDate));
@@ -120,7 +119,7 @@ namespace Aarhusvandsportscenter.Api.Controllers.Rentals
         }
 
         /// <summary>
-        /// Get all rentals detailed
+        /// Get all rentals detailed, including finished rentals.
         /// Requires authorization
         /// </summary>
         [HttpGet("detailed", Name = nameof(GetRentalsDetailed))]

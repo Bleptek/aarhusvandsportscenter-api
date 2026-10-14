@@ -33,7 +33,7 @@ namespace Aarhusvandsportscenter.Api.Infastructure.Middleware
                     var result = new BadRequestObjectResult(errorResponse);
                     result.ContentTypes.Add(MediaTypeNames.Application.Json);
 
-                    var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Startup>>();
+                    var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
                     logger.LogWarning("ModelStateValidationError {errorResponse}", JsonSerializer.Serialize(errorResponse));
 
                     return result;

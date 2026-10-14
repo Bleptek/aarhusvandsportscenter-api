@@ -13,7 +13,7 @@ namespace Aarhusvandsportscenter.Api.Domain.Commands.Accounts
     {
         public record Command(string Email) : IRequest;
 
-        public class Handler : AsyncRequestHandler<Command>
+        public class Handler : IRequestHandler<Command>
         {
             private readonly AppDbContext _dbContext;
             private readonly IMailService _mailService;
@@ -26,7 +26,7 @@ namespace Aarhusvandsportscenter.Api.Domain.Commands.Accounts
                 _mailService = mailService;
             }
 
-            protected override async Task Handle(Command request, CancellationToken cancellationToken)
+            public async Task Handle(Command request, CancellationToken cancellationToken)
             {
                 var account = await _dbContext.Accounts.FirstOrDefaultAsync(x => x.Email == request.Email);
                 if (account == null)
